@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Birthday Surprise</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: "Poppins", sans-serif;
+      overflow: hidden;
+    }
+    #classicPage, #waitingPage, #birthdayPage {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: opacity 1s;
+    }
+    #classicPage {
+      background: #f0f0f0;
+      z-index: 10;
+    }
+    #classicPage h1 {
+      font-size: 3rem;
+      color: #333;
+    }
+    #showBtn {
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      margin-top: 20px;
+      border-radius: 10px;
+      border: none;
+      background: #ff5e78;
+      color: white;
+    }
+    #waitingPage {
+      opacity: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      flex-direction: column;
+      overflow: hidden;
+    }
+    #waitingPage h2 {
+      color: white;
+      font-size: 2rem;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #birthdayPage {
+      opacity: 0;
+      pointer-events: none;
+      background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+      text-align: center;
+      overflow: hidden;
+    }
+
+    /* 3D Floating Hearts and Balloons */
+    .floating3d {
+      position: absolute;
+      font-size: 2.5rem;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+      transform-style: preserve-3d;
+    }
+    @keyframes float3d {
+      0% { transform: translateY(100vh) rotateX(0deg) rotateY(0deg); opacity:1; }
+      100% { transform: translateY(-10vh) rotateX(360deg) rotateY(360deg); opacity:0; }
+    }
+
+    /* 3D Spinning Cake */
+    .cake3d {
+      position: fixed;
+      bottom: 100px;
+      right: 40px;
+      font-size: 5rem;
+      animation: cakeSpin 5s linear infinite;
+      transform-style: preserve-3d;
+    }
+    @keyframes cakeSpin {
+      0% { transform: rotateX(0deg) rotateY(0deg); }
+      100% { transform: rotateX(360deg) rotateY(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Classic Page -->
+  <div id="classicPage">
+    <h1>Welcome to the Birthday Surprise!</h1>
+    <button id="showBtn">Click to Reveal</button>
+  </div>
+
+  <!-- Waiting Page -->
+  <div id="waitingPage">
+    <h2>😆 Just kidding! Nothing serious here… But wait for the fun! 🎉</h2>
+    <div id="waitingEffects"></div>
+  </div>
+
+  <!-- Birthday Page -->
+  <div id="birthdayPage">
+    <h1>🎉 Happy Birthday Praveena! 🎉</h1>
+    <img src="WhatsApp Image 2025-12-09 at 09.28.53.jpeg" style="width:250px; height:250px; border-radius:15px; border:3px solid #ff5e78; margin-bottom:15px;"/>
+    <p id="message">Wishing you a day filled with love, joy, and beautiful moments.<br>May all your dreams and wishes come true on this special day.</p>
+    <div id="hearts3d"></div>
+    <div class="cake3d">🎂</div>
+    <canvas id="fireworksCanvas" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
+    <audio id="bgMusic" autoplay loop>
+      <source src="https://www2.cs.uic.edu/~i101/SoundFiles/StarWars60.wav" type="audio/wav">
+    </audio>
+  </div>
+
+  <script>
+    document.getElementById('showBtn').onclick = function(){
+      const classic = document.getElementById('classicPage');
+      const waiting = document.getElementById('waitingPage');
+      const birthday = document.getElementById('birthdayPage');
+
+      classic.style.opacity = 0;
+      waiting.style.opacity = 1;
+      waiting.style.pointerEvents = 'auto';
+
+      initWaitingEffects();
+
+      // Show birthday page after 10 seconds
+      setTimeout(() => {
+        waiting.style.opacity = 0;
+        waiting.style.pointerEvents = 'none';
+        birthday.style.opacity = 1;
+        birthday.style.pointerEvents = 'auto';
+        startBirthdayEffects();
+      }, 10000);
+    }
+
+    function initWaitingEffects(){
+      const container = document.getElementById('waitingEffects');
+      function createFloating(){
+        const e = document.createElement('div');
+        e.className = 'floating3d';
+        e.textContent = Math.random() > 0.5 ? '💖' : '🎈';
+        e.style.left = Math.random() * window.innerWidth + 'px';
+        e.style.top = Math.random() * window.innerHeight + 'px';
+        e.style.fontSize = (20 + Math.random()*30) + 'px';
+        e.style.animationName = 'float3d';
+        e.style.animationDuration = (4 + Math.random()*4) + 's';
+        container.appendChild(e);
+        setTimeout(()=>e.remove(),8000);
+      }
+      setInterval(createFloating,400);
+    }
+
+    function startBirthdayEffects(){
+      const canvas = document.getElementById('fireworksCanvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      function random(min,max){return Math.random()*(max-min)+min;}
+      class Firework{constructor(){this.x=random(0,canvas.width);this.y=canvas.height;this.targetY=random(50,canvas.height/2);this.size=2;this.exploded=false;this.particles=[];}update(){if(!this.exploded){this.y-=5;if(this.y<=this.targetY){this.exploded=true;for(let i=0;i<30;i++)this.particles.push(new Particle(this.x,this.y));}}this.draw();}draw(){if(!this.exploded){ctx.fillStyle='white';ctx.fillRect(this.x,this.y,this.size,this.size);}this.particles.forEach(p=>p.update());}}
+      class Particle{constructor(x,y){this.x=x;this.y=y;this.speedX=random(-3,3);this.speedY=random(-3,3);this.alpha=1;}update(){this.x+=this.speedX;this.y+=this.speedY;this.alpha-=0.02;this.draw();}draw(){ctx.fillStyle=`rgba(255,255,255,${this.alpha})`;ctx.beginPath();ctx.arc(this.x,this.y,2,0,Math.PI*2);ctx.fill();}}
+      const fireworks=[];setInterval(()=>fireworks.push(new Firework()),1000);
+      function animate(){ctx.clearRect(0,0,canvas.width,canvas.height);fireworks.forEach((fw,i)=>{fw.update();if(fw.exploded&&fw.particles.every(p=>p.alpha<=0))fireworks.splice(i,1);});requestAnimationFrame(animate);}
+      animate();
+
+      const heartsContainer = document.getElementById('hearts3d');
+      function makeHeart3D(){
+        const h = document.createElement('div');
+        h.className = 'floating3d';
+        h.textContent = '💖';
+        h.style.left = Math.random()*window.innerWidth+'px';
+        h.style.top = Math.random()*window.innerHeight+'px';
+        h.style.fontSize = (20 + Math.random()*30)+'px';
+        h.style.animationName = 'float3d';
+        h.style.animationDuration = (4 + Math.random()*4)+'s';
+        heartsContainer.appendChild(h);
+        setTimeout(()=>h.remove(),7000);
+      }
+      setInterval(makeHeart3D,600);
+
+      function makeBalloon3D(){
+        const b = document.createElement('div');
+        b.className = 'floating3d';
+        b.textContent = '🎈';
+        b.style.left = Math.random()*window.innerWidth+'px';
+        b.style.top = Math.random()*window.innerHeight+'px';
+        b.style.fontSize = (25 + Math.random()*30)+'px';
+        b.style.animationName = 'float3d';
+        b.style.animationDuration = (5 + Math.random()*3)+'s';
+        heartsContainer.appendChild(b);
+        setTimeout(()=>b.remove(),8000);
+      }
+      setInterval(makeBalloon3D,800);
+
+      const text = document.getElementById('message').textContent;
+      let idx = 0;
+      document.getElementById('message').textContent = '';
+      function type() {
+        if(idx < text.length){
+          document.getElementById('message').textContent += text.charAt(idx);
+          idx++;
+          setTimeout(type,40);
+        }
+      }
+      type();
+    }
+  </script>
+</body>
+</html>
